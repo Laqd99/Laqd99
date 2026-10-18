@@ -1,13 +1,21 @@
-👋 Hi, I’m @Laqd99👀 
+# Hi, I’m Laqd99 👋
 
 I’m interested in artificial intelligence, programming, and digital health innovations.
 
-🌱 I’m currently learning advanced Python for data analysis and machine learning applications.
+## What I’m learning 🌱
 
-💞️ I’m looking to collaborate on projects that focus on improving healthcare delivery through technology.
+I’m currently learning advanced Python for data analysis and machine learning applications.
 
-📫 How to reach me: You can reach me via email at laqd99@gmail.com.
+## Let’s collaborate 🤝
 
-😄 Pronouns: He/Him.
+I’m looking to collaborate on projects that use technology to improve healthcare delivery.
 
-⚡ Fun fact: I once participated in a hackathon where my team built a prototype for a voice-activated medical assistant in just 48 hours!
+## A hackathon highlight ⚡
+
+During a hackathon, my team built a prototype for a voice-activated medical assistant in just 48 hours.
+
+## Get in touch 📫
+
+- **Email:** [laqd99@gmail.com](mailto:laqd99@gmail.com)
+- **GitHub:** [@Laqd99](https://github.com/Laqd99)
+- **Pronouns:** He/Him
