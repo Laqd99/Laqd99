@@ -34,6 +34,7 @@ function clearNotices() {
 }
 
 async function request(path, options = {}) {
+  if (window.careScheduleDemo) return window.careScheduleDemo.request(path, options);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {

@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+    <link rel="icon" href="data:,">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123f3b">
+    <meta name="description" content="A fictional appointment scheduling demo built with Python and vanilla JavaScript.">
+    <title>Care Schedule · Browser demo</title>
+    <style>
+@charset "UTF-8";
+
+:root {
+  color-scheme: light;
+  --paper: #f7f8f3;
+  --white: #fff;
+  --ink: #142f31;
+  --muted: #607272;
+  --teal: #176859;
+  --line: #e1e7df;
+  --soft-teal: #e8f1eb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; }
+button, select { cursor: pointer; }
+button { border: 0; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid #648d30; outline-offset: 4px; }
+button:disabled, select:disabled { cursor: wait; opacity: .65; }
+.shell { width: min(1240px, calc(100% - 80px)); margin-inline: auto; }
+.site-header { border-bottom: 1px solid var(--line); background: #ffffff80; }
+.header-content { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 23px; font-weight: 750; letter-spacing: -.8px; }
+.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: var(--ink); color: #d6e9bc; font-size: 31px; font-weight: 350; line-height: 1; margin-right: 3px; }
+.wordmark-dot { color: var(--teal); margin-left: -8px; }
+.demo-label { display: inline-flex; align-items: center; gap: 8px; color: #4e6561; font-size: 12px; letter-spacing: .1px; }
+.demo-label > span { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+.intro { display: flex; justify-content: space-between; align-items: center; gap: 30px; padding: 49px 0 33px; }
+.eyebrow { margin: 0 0 10px; color: var(--teal); font-size: 10px; font-weight: 750; letter-spacing: 1.7px; text-transform: uppercase; }
+h1 { margin: 0; font-size: clamp(32px, 3.65vw, 47px); line-height: 1.13; font-weight: 650; letter-spacing: -1.9px; }
+.intro-copy { color: var(--muted); margin: 16px 0 0; font-size: 14px; }
+.today-card { padding: 23px 27px; border-left: 1px solid #ced9ca; display: flex; flex-direction: column; min-width: 240px; color: var(--muted); font-size: 12px; }
+.today-card .today-label { text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px; }
+.today-card strong { margin: 6px 0; font-size: 20px; font-weight: 600; color: var(--ink); letter-spacing: -.4px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 30px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff96; }
+.stat { padding: 21px 25px; display: grid; grid-template-columns: 1fr auto; gap: 3px 15px; align-items: center; }
+.stat + .stat { border-left: 1px solid var(--line); }
+.stat-label { font-size: 12px; display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.stat strong { grid-column: 2; grid-row: 1 / 3; font-size: 36px; font-weight: 600; letter-spacing: -1.5px; line-height: 1.2; }
+.stat-caption { grid-column: 1; font-size: 11px; color: var(--muted); }
+.status-dot { display: inline-block; width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; }
+.status-dot.scheduled { background: #467658; }
+.status-dot.completed { background: #316589; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 338px; align-items: start; gap: 24px; }
+.panel { background: var(--white); border: 1px solid var(--line); border-radius: 15px; overflow: hidden; }
+.panel-heading { padding: 26px 26px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.panel-heading .eyebrow { margin-bottom: 5px; font-size: 9px; letter-spacing: 1.4px; }
+h2 { margin: 0; font-size: 23px; font-weight: 650; letter-spacing: -.7px; }
+.button-text { color: var(--teal); background: transparent; font-size: 11px; font-weight: 600; padding: 8px 0 8px 8px; }
+.button-text span { font-size: 18px; margin-left: 5px; vertical-align: -1px; }
+.filters { display: grid; grid-template-columns: minmax(0, 1fr) 140px; gap: 10px; padding: 22px 26px 19px; }
+input, select, textarea { width: 100%; border: 1px solid #d6dfd6; border-radius: 7px; color: var(--ink); background: var(--white); padding: 11px 12px; font-size: 12px; line-height: 1.5; min-height: 42px; }
+input::placeholder, textarea::placeholder { color: #758580; opacity: 1; }
+input:hover, select:hover, textarea:hover { border-color: #99b2a1; }
+input:focus, select:focus, textarea:focus { border-color: var(--teal); }
+textarea { resize: vertical; min-height: 88px; }
+select { padding-right: 8px; }
+.search-field { position: relative; }
+.search-field input { padding-left: 36px; }
+.search-icon { position: absolute; width: 12px; height: 12px; border: 1.5px solid #6e817a; border-radius: 50%; left: 13px; top: 13px; pointer-events: none; }
+.search-icon::after { content: ""; position: absolute; height: 5px; width: 1.5px; background: #6e817a; transform: rotate(-45deg); right: -2px; bottom: -4px; }
+.list-summary { padding: 0 26px 12px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 10px; }
+.local-time-label { color: #70817b; }
+.appointment-list { min-height: 40px; }
+.appointment { display: grid; grid-template-columns: 46px minmax(0, 1fr) 114px; align-items: center; gap: 15px; padding: 19px 26px; border-top: 1px solid #e9ede7; }
+.date-tile { background: #f0f3ed; border: 1px solid #e4eade; border-radius: 8px; min-height: 53px; width: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.date-tile span { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #5f7468; }
+.date-tile strong { font-size: 19px; font-weight: 600; line-height: 1.15; }
+.appointment h3 { margin: 0 0 3px; font-size: 13px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
+.appointment-details { margin: 0; color: #596e66; font-size: 11px; overflow-wrap: anywhere; }
+.appointment-details .detail-separator { margin: 0 5px; color: #9aaba1; }
+.appointment-reason { color: #6e7f78; font-size: 11px; margin: 5px 0 0; overflow-wrap: anywhere; }
+.status-control { align-self: start; padding-top: 3px; }
+.status-select { min-height: 30px; padding: 5px 5px 5px 8px; font-size: 10px; font-weight: 650; border-radius: 6px; border-color: transparent; }
+.status-select.scheduled { background: #eaf1e6; color: #395f2e; }
+.status-select.completed { background: #e9f0f5; color: #315975; }
+.status-select.cancelled { background: #f2eeeb; color: #725848; }
+.schedule-footnote { display: flex; align-items: center; gap: 8px; padding: 17px 26px; border-top: 1px solid var(--line); background: #fcfdfb; color: #687d71; font-size: 10px; }
+.form-panel { background: #fdfefa; }
+.form-plus { color: var(--teal); font-size: 25px; font-weight: 300; padding-bottom: 5px; }
+.form-copy { margin: 12px 26px 22px; color: var(--muted); font-size: 12px; }
+form { padding: 0 26px; }
+.field { margin-bottom: 18px; }
+.field label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 650; }
+.field small { display: block; margin-top: 5px; color: #687b6f; font-size: 10px; }
+.button-primary { display: flex; justify-content: center; align-items: center; gap: 9px; min-height: 44px; width: 100%; border-radius: 7px; color: #fff; background: var(--teal); font-size: 12px; font-weight: 650; padding: 11px; transition: background .15s; }
+.button-primary:hover { background: #104f43; }
+.button-primary > span { font-size: 18px; line-height: 1; font-weight: 400; }
+.form-note { display: flex; align-items: center; gap: 13px; padding: 20px 26px 24px; margin-top: 7px; color: #5e7662; }
+.form-note > span { display: grid; place-items: center; border: 1px solid #d5e2ce; background: #eff4e8; width: 32px; height: 32px; border-radius: 50%; font-size: 19px; }
+.form-note p { margin: 0; font-size: 10px; }
+.empty-state { text-align: center; padding: 46px 26px; border-top: 1px solid var(--line); }
+.empty-symbol { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--soft-teal); color: var(--teal); margin: 0 auto 15px; font-size: 25px; font-weight: 300; }
+.empty-state h3 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+.empty-state p { font-size: 12px; color: var(--muted); margin: 0; }
+.notice { padding: 13px 17px; border: 1px solid; border-radius: 8px; font-size: 13px; margin: 0 0 18px; overflow-wrap: anywhere; }
+.notice-success { color: #28533c; background: #edf5e9; border-color: #cbdcc1; }
+.notice-error { color: #893d2a; background: #fff2ea; border-color: #e9c5b3; }
+.site-footer { display: flex; justify-content: space-between; gap: 20px; padding-top: 34px; padding-bottom: 30px; color: #768478; font-size: 10px; }
+.site-footer > span:first-child { color: #627965; font-size: 12px; font-weight: 650; }
+.site-footer .wordmark-dot { margin-left: 0; }
+.skip-link { position: absolute; top: -60px; left: 20px; z-index: 5; padding: 10px 18px; border-radius: 5px; background: var(--ink); color: white; }
+.skip-link:focus { top: 12px; }
+.sr-only { position: absolute; height: 1px; width: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+@media (min-width: 1500px) { .intro { padding-top: 64px; } }
+@media (max-width: 1000px) {
+  .shell { width: calc(100% - 44px); }
+  .workspace-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; }
+  .panel-heading { padding-inline: 20px; }
+  .filters { padding-inline: 20px; grid-template-columns: minmax(0, 1fr) 123px; }
+  .appointment { padding-inline: 20px; gap: 11px; grid-template-columns: 42px minmax(0, 1fr) 105px; }
+  .date-tile { width: 42px; }
+  form { padding-inline: 20px; }
+  .form-copy { margin-inline: 20px; }
+  .form-note { padding-inline: 20px; }
+  .stat { padding-inline: 20px; }
+}
+@media (max-width: 800px) {
+  .workspace-grid { grid-template-columns: 1fr; }
+  .today-card { min-width: 200px; padding: 18px; }
+  .form-panel form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .form-panel .button-primary { grid-column: 1 / -1; margin-bottom: 5px; }
+  .stat { padding: 18px; }
+  .stat strong { font-size: 29px; }
+  .stat-caption { font-size: 10px; }
+  h1 { font-size: 37px; }
+}
+@media (max-width: 580px) {
+  .shell { width: calc(100% - 32px); }
+  .header-content { align-items: flex-start; justify-content: center; flex-direction: column; gap: 10px; min-height: 101px; padding-block: 17px; }
+  .wordmark { font-size: 21px; }
+  .brand-mark { width: 29px; height: 29px; font-size: 28px; }
+  .demo-label { font-size: 10px; }
+  .intro { padding: 29px 0 25px; display: block; }
+  h1 { font-size: 35px; letter-spacing: -1.4px; }
+  .intro-copy { font-size: 12px; margin-top: 13px; max-width: 275px; }
+  .today-card { border-left: 0; padding: 0; min-width: 0; margin-top: 22px; flex-direction: row; align-items: baseline; gap: 8px; }
+  .today-card strong { font-size: 12px; margin: 0; letter-spacing: 0; }
+  .today-card > span:last-child { display: none; }
+  .stats { margin-bottom: 22px; }
+  .stat { display: flex; flex-direction: column; align-items: flex-start; padding: 15px 12px; gap: 7px; }
+  .stat-label { font-size: 10px; gap: 5px; white-space: nowrap; }
+  .stat strong { font-size: 30px; order: 2; }
+  .stat-caption { display: none; }
+  .panel-heading { padding-top: 22px; }
+  h2 { font-size: 22px; }
+  .filters { grid-template-columns: 1fr; gap: 8px; padding-block: 18px 14px; }
+  .list-summary { padding-inline: 20px; }
+  .appointment { grid-template-columns: 42px minmax(0, 1fr); gap: 10px 12px; padding-block: 17px; }
+  .date-tile { grid-row: 1 / 3; align-self: start; }
+  .status-control { grid-column: 2; padding: 0; max-width: 115px; }
+  .appointment-details .detail-separator { margin-inline: 3px; }
+  .schedule-footnote { padding-inline: 20px; font-size: 9px; }
+  .form-panel form { display: block; }
+  .site-footer { flex-direction: column; gap: 5px; padding-block: 27px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+</style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to appointments</a>
+    <header class="site-header">
+      <div class="shell header-content">
+        <a class="wordmark" href="#main-content" aria-label="Care Schedule home"><span class="brand-mark" aria-hidden="true">+</span> Care Schedule<span class="wordmark-dot">.</span></a>
+        <span class="demo-label"><span aria-hidden="true"></span>Fictional data · portfolio demo</span>
+      </div>
+    </header>
+
+    <main class="shell" id="main-content">
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">A little clarity for your day</p>
+          <h1 id="page-title">Good care starts<br>with a clear schedule.</h1>
+          <p class="intro-copy">Keep appointments, people, and next steps in one place.</p>
+        </div>
+        <div class="today-card"><span class="today-label">Today</span><strong id="current-date">Your schedule</strong><span>Make room for what matters.</span></div>
+      </section>
+
+      <section class="stats" aria-label="Appointment totals">
+        <div class="stat"><span class="stat-label">All appointments</span><strong id="total-count">—</strong><span class="stat-caption">Across your schedule</span></div>
+        <div class="stat"><span class="stat-label"><span class="status-dot scheduled" aria-hidden="true"></span>Scheduled</span><strong id="scheduled-count">—</strong><span class="stat-caption">Ready for the next step</span></div>
+        <div class="stat"><span class="stat-label"><span class="status-dot completed" aria-hidden="true"></span>Completed</span><strong id="completed-count">—</strong><span class="stat-caption">Visits marked as complete</span></div>
+      </section>
+
+      <div class="notifications">
+        <p id="success-message" class="notice notice-success" role="status" aria-live="polite" hidden></p>
+        <p id="error-message" class="notice notice-error" role="alert" hidden></p>
+      </div>
+
+      <div class="workspace-grid">
+        <section class="schedule-panel panel" aria-labelledby="schedule-title">
+          <div class="panel-heading">
+            <div><p class="eyebrow">Your overview</p><h2 id="schedule-title">Appointments</h2></div>
+            <button class="button-text" id="refresh-button" type="button">Refresh <span aria-hidden="true">↻</span></button>
+          </div>
+          <div class="filters">
+            <div class="search-field"><label class="sr-only" for="search">Search appointments</label><span aria-hidden="true" class="search-icon"></span><input id="search" type="search" placeholder="Search people or appointments" autocomplete="off"></div>
+            <div><label class="sr-only" for="status-filter">Filter by status</label><select id="status-filter"><option value="all">All statuses</option><option value="scheduled">Scheduled</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+          </div>
+          <div class="list-summary"><span id="results-summary" role="status" aria-live="polite">Loading appointments…</span><span class="local-time-label">Local date &amp; time</span></div>
+          <div id="appointment-list" class="appointment-list" aria-busy="true"></div>
+          <div class="empty-state" id="empty-state" hidden><span class="empty-symbol" aria-hidden="true">+</span><h3 id="empty-title">A fresh start.</h3><p id="empty-copy">Add an appointment to start your schedule.</p></div>
+          <div class="schedule-footnote"><span class="status-dot scheduled" aria-hidden="true"></span>Change an appointment’s status from its status menu.</div>
+        </section>
+
+        <aside class="form-panel panel" aria-labelledby="form-title">
+          <div class="panel-heading"><div><p class="eyebrow">Plan the next step</p><h2 id="form-title">New appointment</h2></div><span class="form-plus" aria-hidden="true">+</span></div>
+          <p class="form-copy">Add the details. Keep the day moving.</p>
+          <form id="appointment-form">
+            <div class="field"><label for="patient-alias">Patient alias</label><input id="patient-alias" name="patient_alias" type="text" maxlength="60" placeholder="e.g. Avery P." autocomplete="off" aria-describedby="alias-help" required><small id="alias-help">Use fictional aliases only.</small></div>
+            <div class="field"><label for="clinician">Clinician</label><input id="clinician" name="clinician" type="text" maxlength="60" placeholder="e.g. Dr. Morgan" autocomplete="off" required></div>
+            <div class="field"><label for="starts-at">Date &amp; time</label><input id="starts-at" name="starts_at" type="datetime-local" required></div>
+            <div class="field"><label for="reason">Appointment reason</label><textarea id="reason" name="reason" maxlength="240" rows="3" placeholder="e.g. Routine check-in" required></textarea></div>
+            <button class="button-primary" id="submit-button" type="submit"><span aria-hidden="true">+</span> Add appointment</button>
+          </form>
+          <div class="form-note"><span aria-hidden="true">↗</span><p>One clear schedule.<br>A little less to keep in your head.</p></div>
+        </aside>
+      </div>
+    </main>
+    <footer class="shell site-footer"><span>Care Schedule<span class="wordmark-dot">.</span></span><span>Browser demo · fictional data stays in your browser.</span></footer>
+  <script>
+"use strict";
+
+// This adapter is included only in the standalone browser demo.
+// The Python application continues to use its HTTP API and SQLite database.
+(() => {
+  const STORAGE_KEY = "care-schedule.demo.v1";
+  const statuses = new Set(["scheduled", "completed", "cancelled"]);
+  let persistent = true;
+  let storage;
+  let state = seedState();
+  let memoryReason = "";
+
+  const notice = document.createElement("p");
+  notice.id = "demo-storage-notice";
+  notice.className = "intro-copy";
+  notice.setAttribute("role", "status");
+  notice.setAttribute("aria-live", "polite");
+  document.querySelector(".intro-copy").after(notice);
+  const label = document.querySelector(".demo-label");
+  const indicator = document.createElement("span");
+  indicator.setAttribute("aria-hidden", "true");
+  label.replaceChildren(indicator, document.createTextNode("Fictional data · browser demo"));
+
+  function updateNotice() {
+    notice.textContent = persistent
+      ? "Saved in this browser. This demo works without a server."
+      : `${memoryReason} Changes last only until this page closes or reloads.`;
+  }
+
+  function useMemory(reason) {
+    persistent = false;
+    memoryReason = reason;
+    updateNotice();
+  }
+
+  function error(status, message) {
+    const result = new Error(message);
+    result.status = status;
+    return result;
+  }
+
+  function copy(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function exactKeys(value, expected) {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+      && Object.keys(value).length === expected.length
+      && expected.every(key => Object.prototype.hasOwnProperty.call(value, key));
+  }
+
+  function validDateTime(value) {
+    if (typeof value !== "string" || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$/.test(value)) return false;
+    const [year, month, day, hour, minute] = value.split(/[-T:]/).map(Number);
+    if (year < 1 || month < 1 || month > 12 || day < 1 || hour > 23 || minute > 59) return false;
+    const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return day <= daysInMonth[month - 1];
+  }
+
+  function validateAppointment(payload) {
+    if (!exactKeys(payload, ["patient_alias", "clinician", "starts_at", "reason"])) {
+      throw error(400, "Provide patient_alias, clinician, starts_at, and reason only.");
+    }
+    const result = {};
+    for (const [field, limit] of [["patient_alias", 60], ["clinician", 60], ["reason", 240]]) {
+      const value = payload[field];
+      const length = typeof value === "string" ? Array.from(value.trim()).length : 0;
+      if (length < 1 || length > limit) throw error(400, `${field} must contain between 1 and ${limit} characters.`);
+      result[field] = value.trim();
+    }
+    if (!validDateTime(payload.starts_at)) {
+      throw error(400, "starts_at must be a valid date and time in YYYY-MM-DDTHH:MM format.");
+    }
+    result.starts_at = payload.starts_at;
+    return result;
+  }
+
+  function seedState() {
+    const examples = [
+      ["Fictional Amber", "Dr. Demo Rowan", -1, "09:00", "Demo follow-up", "completed"],
+      ["Fictional Birch", "Dr. Demo Rowan", 0, "14:00", "Demo wellbeing check-in", "scheduled"],
+      ["Fictional Cedar", "Dr. Demo Morgan", 1, "10:30", "Demo routine appointment", "scheduled"],
+      ["Fictional Dune", "Dr. Demo Morgan", 2, "11:00", "Demo consultation", "cancelled"],
+    ];
+    const today = new Date();
+    return {
+      version: 1,
+      nextId: 5,
+      appointments: examples.map(([patient_alias, clinician, offset, time, reason, status], index) => {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+        const localDay = [day.getFullYear(), String(day.getMonth() + 1).padStart(2, "0"), String(day.getDate()).padStart(2, "0")].join("-");
+        return { id: index + 1, patient_alias, clinician, starts_at: `${localDay}T${time}`, reason, status };
+      }),
+    };
+  }
+
+  function validateState(value) {
+    if (!exactKeys(value, ["version", "nextId", "appointments"]) || value.version !== 1
+      || !Number.isSafeInteger(value.nextId) || value.nextId < 1 || !Array.isArray(value.appointments)) {
+      throw new Error("Invalid demo data.");
+    }
+    const ids = new Set();
+    const reserved = new Map();
+    for (const item of value.appointments) {
+      if (!exactKeys(item, ["id", "patient_alias", "clinician", "starts_at", "reason", "status"])
+        || !Number.isSafeInteger(item.id) || item.id < 1 || item.id >= value.nextId
+        || ids.has(item.id) || !statuses.has(item.status)) throw new Error("Invalid appointment.");
+      const fields = validateAppointment({ patient_alias: item.patient_alias, clinician: item.clinician, starts_at: item.starts_at, reason: item.reason });
+      if (Object.entries(fields).some(([key, field]) => item[key] !== field)) throw new Error("Invalid appointment.");
+      ids.add(item.id);
+      if (item.status === "scheduled") {
+        if (!reserved.has(item.clinician)) reserved.set(item.clinician, new Set());
+        const times = reserved.get(item.clinician);
+        if (times.has(item.starts_at)) throw new Error("Conflicting appointments.");
+        times.add(item.starts_at);
+      }
+    }
+    return value;
+  }
+
+  function writeState(nextState) {
+    state = nextState;
+    if (!persistent) return;
+    try {
+      storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      useMemory("Browser storage is full or unavailable.");
+    }
+  }
+
+  function readState() {
+    if (!persistent) return state;
+    let saved;
+    try {
+      saved = storage.getItem(STORAGE_KEY);
+    } catch {
+      useMemory("Browser storage is unavailable.");
+      return state;
+    }
+    if (saved === null) {
+      writeState(seedState());
+      return state;
+    }
+    try {
+      state = validateState(JSON.parse(saved));
+    } catch {
+      // Leave the original saved value intact rather than destroying unreadable data.
+      useMemory("Saved demo data could not be read. Showing the last valid schedule or sample appointments.");
+    }
+    return state;
+  }
+
+  function payloadFrom(options) {
+    try {
+      const payload = JSON.parse(options.body);
+      if (payload === null || typeof payload !== "object" || Array.isArray(payload)) throw new Error();
+      return payload;
+    } catch {
+      throw error(400, "Send a complete, valid JSON object.");
+    }
+  }
+
+  function checkConflict(appointment, items, ownId) {
+    if (appointment.status === "scheduled" && items.some(item => item.id !== ownId
+      && item.status === "scheduled" && item.clinician === appointment.clinician && item.starts_at === appointment.starts_at)) {
+      throw error(409, "This clinician already has a scheduled appointment at that time.");
+    }
+  }
+
+  async function request(path, options = {}) {
+    const current = readState();
+    const method = (options.method || "GET").toUpperCase();
+    if (method === "GET" && path === "/api/appointments") {
+      return { appointments: copy(current.appointments).sort((a, b) => a.starts_at.localeCompare(b.starts_at) || a.id - b.id) };
+    }
+    if (method === "POST" && path === "/api/appointments") {
+      const fields = validateAppointment(payloadFrom(options));
+      if (current.nextId >= Number.MAX_SAFE_INTEGER) throw error(503, "The demo cannot allocate another appointment ID.");
+      const appointment = { id: current.nextId, ...fields, status: "scheduled" };
+      checkConflict(appointment, current.appointments);
+      writeState({ version: 1, nextId: current.nextId + 1, appointments: [...current.appointments, appointment] });
+      return { appointment: copy(appointment) };
+    }
+    if (method === "PATCH" && /^\/api\/appointments\/[0-9]+$/.test(path)) {
+      const payload = payloadFrom(options);
+      if (!exactKeys(payload, ["status"]) || !statuses.has(payload.status)) {
+        throw error(400, "Provide only status: scheduled, completed, or cancelled.");
+      }
+      const id = Number(path.slice(path.lastIndexOf("/") + 1));
+      const original = current.appointments.find(item => item.id === id);
+      if (!original) throw error(404, "This appointment does not exist.");
+      const appointment = { ...original, status: payload.status };
+      checkConflict(appointment, current.appointments, id);
+      writeState({ ...current, appointments: current.appointments.map(item => item.id === id ? appointment : item) });
+      return { appointment: copy(appointment) };
+    }
+    throw error(["GET", "POST", "PATCH"].includes(method) ? 404 : 405, "This page or endpoint does not exist.");
+  }
+
+  try {
+    storage = window.localStorage;
+    readState();
+  } catch {
+    useMemory("Browser storage is unavailable.");
+  }
+  updateNotice();
+  window.careScheduleDemo = Object.freeze({ request });
+})();
+
+</script>
+<script>
+"use strict";
+
+const form = document.querySelector("#appointment-form");
+const list = document.querySelector("#appointment-list");
+const search = document.querySelector("#search");
+const statusFilter = document.querySelector("#status-filter");
+const refreshButton = document.querySelector("#refresh-button");
+const submitButton = document.querySelector("#submit-button");
+const successMessage = document.querySelector("#success-message");
+const errorMessage = document.querySelector("#error-message");
+const statusLabels = { scheduled: "Scheduled", completed: "Completed", cancelled: "Cancelled" };
+let appointments = [];
+let loaded = false;
+let loading = false;
+let submitting = false;
+let loadVersion = 0;
+const pendingUpdates = new Set();
+
+document.querySelector("#current-date").textContent = new Intl.DateTimeFormat(undefined, {
+  weekday: "short", month: "long", day: "numeric", year: "numeric",
+}).format(new Date());
+
+function notify(message, error = false) {
+  const target = error ? errorMessage : successMessage;
+  target.textContent = message;
+  target.hidden = false;
+}
+
+function clearNotices() {
+  successMessage.hidden = true;
+  errorMessage.hidden = true;
+  successMessage.textContent = "";
+  errorMessage.textContent = "";
+}
+
+async function request(path, options = {}) {
+  if (window.careScheduleDemo) return window.careScheduleDemo.request(path, options);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(path, {
+      credentials: "same-origin",
+      ...options,
+      headers: { Accept: "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...options.headers },
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data && typeof data.error === "string" ? data.error : `The request could not be completed (${response.status}). Please try again.`);
+    }
+    if (!data) throw new Error("The server returned an unreadable response. Please try again.");
+    return data;
+  } catch (error) {
+    if (error.name === "AbortError") throw new Error("The request took too long. Please refresh to check the latest schedule before trying again.");
+    if (error instanceof TypeError) throw new Error("Could not reach the server. Check your connection, then refresh to see the latest schedule.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// Build a local date from its components so an appointment never shifts time zones.
+function localDate(value) {
+  const [date, time] = value.split("T");
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute);
+}
+
+function node(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+
+function appointmentCard(appointment) {
+  const date = localDate(appointment.starts_at);
+  const card = node("article", "appointment");
+  const tile = node("div", "date-tile");
+  tile.setAttribute("aria-hidden", "true");
+  tile.append(node("span", "", new Intl.DateTimeFormat(undefined, { month: "short" }).format(date)), node("strong", "", String(date.getDate())));
+
+  const content = node("div", "appointment-content");
+  const heading = node("h3", "", appointment.patient_alias);
+  const details = node("p", "appointment-details");
+  const time = node("time", "", new Intl.DateTimeFormat(undefined, {
+    weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+  }).format(date));
+  time.dateTime = appointment.starts_at;
+  details.append(time, node("span", "detail-separator", "·"), node("span", "", appointment.clinician));
+  content.append(heading, details, node("p", "appointment-reason", appointment.reason));
+
+  const controls = node("div", "status-control");
+  const select = node("select", `status-select ${appointment.status}`);
+  select.setAttribute("aria-label", `Status for ${appointment.patient_alias}, ${time.textContent}`);
+  for (const [value, label] of Object.entries(statusLabels)) {
+    const option = node("option", "", label);
+    option.value = value;
+    select.append(option);
+  }
+  select.value = appointment.status;
+  select.disabled = pendingUpdates.has(appointment.id);
+  select.addEventListener("change", () => updateStatus(appointment, select));
+  controls.append(select);
+  card.append(tile, content, controls);
+  return card;
+}
+
+function render() {
+  if (loaded) {
+    document.querySelector("#total-count").textContent = String(appointments.length);
+    document.querySelector("#scheduled-count").textContent = String(appointments.filter(item => item.status === "scheduled").length);
+    document.querySelector("#completed-count").textContent = String(appointments.filter(item => item.status === "completed").length);
+  }
+  const query = search.value.trim().toLocaleLowerCase();
+  const visible = appointments.filter(item => (
+    (statusFilter.value === "all" || item.status === statusFilter.value)
+    && [item.patient_alias, item.clinician, item.reason].some(value => value.toLocaleLowerCase().includes(query))
+  )).sort((a, b) => a.starts_at.localeCompare(b.starts_at) || a.id - b.id);
+  list.replaceChildren(...visible.map(appointmentCard));
+  list.setAttribute("aria-busy", String(loading));
+  const summary = document.querySelector("#results-summary");
+  summary.textContent = loaded
+    ? `${visible.length} ${visible.length === 1 ? "appointment" : "appointments"}${query || statusFilter.value !== "all" ? ` of ${appointments.length}` : ""}${loading ? " · Refreshing…" : ""}`
+    : loading ? "Loading appointments…" : "Schedule unavailable";
+  const empty = document.querySelector("#empty-state");
+  empty.hidden = visible.length > 0 || loading;
+  if (!loaded) {
+    document.querySelector("#empty-title").textContent = "Let’s reconnect.";
+    document.querySelector("#empty-copy").textContent = "Refresh to try loading your appointments again.";
+  } else if (appointments.length > 0) {
+    document.querySelector("#empty-title").textContent = "No appointments found.";
+    document.querySelector("#empty-copy").textContent = "Try a different search or choose another status.";
+  } else {
+    document.querySelector("#empty-title").textContent = "A fresh start.";
+    document.querySelector("#empty-copy").textContent = "Add an appointment to start your schedule.";
+  }
+}
+
+async function loadAppointments() {
+  const version = ++loadVersion;
+  loading = true;
+  refreshButton.disabled = true;
+  render();
+  try {
+    const data = await request("/api/appointments");
+    if (version !== loadVersion) return;
+    if (!Array.isArray(data.appointments)) throw new Error("The server returned an unexpected schedule. Please refresh to try again.");
+    appointments = data.appointments;
+    loaded = true;
+  } catch (error) {
+    if (version === loadVersion) notify(`${loaded ? "Could not refresh the schedule. The last loaded appointments are still shown. " : ""}${error.message}`, true);
+  } finally {
+    if (version === loadVersion) {
+      loading = false;
+      refreshButton.disabled = false;
+      render();
+    }
+  }
+}
+
+async function updateStatus(appointment, select) {
+  if (pendingUpdates.has(appointment.id)) return;
+  const status = select.value;
+  pendingUpdates.add(appointment.id);
+  select.disabled = true;
+  clearNotices();
+  // Invalidate any older read so it cannot overwrite a successful mutation.
+  ++loadVersion;
+  try {
+    const data = await request(`/api/appointments/${encodeURIComponent(appointment.id)}`, {
+      method: "PATCH", body: JSON.stringify({ status }),
+    });
+    appointments = appointments.map(item => item.id === appointment.id ? data.appointment : item);
+    notify(`${appointment.patient_alias}’s appointment is now ${statusLabels[status].toLowerCase()}.`);
+  } catch (error) {
+    select.value = appointment.status;
+    notify(error.message, true);
+  } finally {
+    pendingUpdates.delete(appointment.id);
+    await loadAppointments();
+  }
+}
+
+form.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (submitting || !form.reportValidity()) return;
+  const payload = Object.fromEntries(new FormData(form));
+  for (const field of ["patient_alias", "clinician", "reason"]) {
+    payload[field] = payload[field].trim();
+    if (!payload[field]) {
+      form.elements.namedItem(field).focus();
+      notify("Please fill in each appointment detail.", true);
+      return;
+    }
+  }
+  submitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = "Adding appointment…";
+  form.setAttribute("aria-busy", "true");
+  clearNotices();
+  ++loadVersion;
+  try {
+    const data = await request("/api/appointments", { method: "POST", body: JSON.stringify(payload) });
+    appointments.push(data.appointment);
+    loaded = true;
+    form.reset();
+    search.value = "";
+    statusFilter.value = "all";
+    notify(`Appointment added for ${data.appointment.patient_alias}.`);
+    document.querySelector("#patient-alias").focus();
+    await loadAppointments();
+  } catch (error) {
+    notify(error.message, true);
+    // A connection failure can happen after a save; refresh before another submission.
+    await loadAppointments();
+  } finally {
+    submitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = "+ Add appointment";
+    form.setAttribute("aria-busy", "false");
+  }
+});
+
+search.addEventListener("input", render);
+statusFilter.addEventListener("change", render);
+refreshButton.addEventListener("click", () => {
+  clearNotices();
+  loadAppointments();
+});
+loadAppointments();
+
+</script>
+  </body>
+</html>
